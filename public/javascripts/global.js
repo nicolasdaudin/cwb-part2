@@ -18,7 +18,8 @@ function populateTable(){
 	// jQuery AJAX call for JSON
 	$.getJSON('/users/userlist',function(data){
 
-    // For each item in our JSON, add a table row and cells to the content string
+		console.log(data);
+    	// For each item in our JSON, add a table row and cells to the content string
         $.each(data, function(){
             tableContent += '<tr>';
             tableContent += '<td><a href="#" class="linkshowuser" rel="' + this.username + '">' + this.username + '</a></td>';
