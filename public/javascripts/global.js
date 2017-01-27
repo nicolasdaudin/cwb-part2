@@ -12,8 +12,16 @@ $(document).ready(function(){
     // Add User button click
     $('#btnAddUser').on('click',addUser);
 
+	// Add User button click
+    $('#btnEditUser').on('click',editUser);
+    
+    // Edit User link click
+    $('#userList table tbody').on('click', 'td a.linkedituser', showEditUser);
+
     // Delete User link click
     $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
+
+    $('#editUser').hide();
 });
 
 // Functions ============
@@ -28,7 +36,8 @@ function populateTable(){
 	$.getJSON('/users/userlist',function(data){
 
 
-		//console.log(data);
+		console.log('**** userListData ****');
+		console.log(data);
 		userListData = data;
 
     	// For each item in our JSON, add a table row and cells to the content string
@@ -36,6 +45,7 @@ function populateTable(){
             tableContent += '<tr>';
             tableContent += '<td><a href="#" class="linkshowuser" rel="' + this.username + '">' + this.username + '</a></td>';
             tableContent += '<td>' + this.email + '</td>';
+            tableContent += '<td><a href="#" class="linkedituser" rel="' + this._id + '">edit</a></td>';
             tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
             tableContent += '</tr>';
         });
@@ -54,7 +64,7 @@ function showUserInfo(event) {
     // Retrieve username from link rel attribute
     var thisUserName = $(this).attr('rel');
 
-    // Get Index of object based on id value
+    // Get Index of object based on name value
     var arrayPosition = userListData.map(function(arrayItem) { return arrayItem.username; }).indexOf(thisUserName);
 
 
@@ -66,6 +76,94 @@ function showUserInfo(event) {
     $('#userInfoAge').text(thisUserObject.age);
     $('#userInfoGender').text(thisUserObject.gender);
     $('#userInfoLocation').text(thisUserObject.location);
+
+};
+
+function showEditUser(event){
+	event.preventDefault();
+
+	//$('#addUser').hide();
+	$('#editUser').show();
+
+	console.log("showEditUser");
+
+    // Retrieve username from link rel attribute
+    var thisId = $(this).attr('rel');
+
+    // Get Index of object based on id value
+    var arrayPosition = userListData.map(function(arrayItem) { return arrayItem._id; }).indexOf(thisId);
+
+
+    // Get our User Object
+    var thisUserObject = userListData[arrayPosition];
+
+    //Populate Info Box
+    $('#editUser fieldset input#inputUserId').val(thisUserObject._id);
+    $('#editUser fieldset input#inputUserName').val(thisUserObject.username);
+	$('#editUser fieldset input#inputUserEmail').val(thisUserObject.email);
+    $('#editUser fieldset input#inputUserFullname').val(thisUserObject.fullname);
+    $('#editUser fieldset input#inputUserAge').val(thisUserObject.age);
+    $('#editUser fieldset input#inputUserGender').val(thisUserObject.gender);
+    $('#editUser fieldset input#inputUserLocation').val(thisUserObject.location);
+
+}
+
+// Edit User
+function editUser(event){
+	event.preventDefault();
+
+	console.log('editUser');
+
+	// Super basic validation - increase errorCount variable if any fieleds are blank
+	var errorCount = 0;
+	$('#editUser input').each(function(index,val){
+		if ($(this).val() === ''){ errorCount ++;}
+	});
+
+	// Check and makre sure errorCount's still at zero
+	if (errorCount === 0){
+
+		// If it is, compile all user info into one object
+		var updatedUser = {
+			'_id' : $('#editUser fieldset input#inputUserId').val(),
+            'username': $('#editUser fieldset input#inputUserName').val(),
+            'email': $('#editUser fieldset input#inputUserEmail').val(),
+            'fullname': $('#editUser fieldset input#inputUserFullname').val(),
+            'age': $('#editUser fieldset input#inputUserAge').val(),
+            'location': $('#editUser fieldset input#inputUserLocation').val(),
+            'gender': $('#editUser fieldset input#inputUserGender').val()
+        }
+
+        console.log('updatedUser._id : ' + updatedUser._id);
+
+        // Use AJAX to put the object to our edit user service
+        $.ajax({
+        	type: 'PUT',
+        	data: updatedUser,
+        	url: '/users/edituser',
+        	dataType : 'JSON'
+        }).done(function(response){
+        	// Check for successful (blank) response
+        	if (response.msg === ''){
+
+        		// Clear the form inputs
+        		$('#editUser fieldset input').val('');
+        		// Hide edit form
+        		$('#editUser').hide();
+
+        		// Update the table
+        		populateTable();
+        	} else {
+        		// If something goes wrong, alert the error message that our service returned
+        		alert('Error : ' + response.msg);
+        	}
+        });
+
+	} else {
+		// if Errorcount is more than 0, error out
+		alert ('Please fill in all fields');
+		return false;
+	}
 
 };
 

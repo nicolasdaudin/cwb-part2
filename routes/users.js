@@ -38,4 +38,29 @@ router.get('/userlist',function(req,res){
  		res.send((err === null) ? {msg:''} : {msg:'error : ' + err});
  	});
  });
+
+/*
+ * PUT to edit user
+ */
+router.put('/edituser', function(req,res) {
+	var db = req.db;
+
+	console.log("edit user");
+	console.log(req.body);
+	
+	var collection = db.get('userlist');
+	var userToEdit = req.body._id;
+	collection.update({'_id' : userToEdit},req.body, function(err,result){
+		if (err === null) {
+			res.send({msg: ''});
+		} else {
+			console.log('error while editing : ' + err);
+			res.send({msg : 'error : ' + err});
+		}
+
+	});
+});
+
 module.exports = router;
+
+
